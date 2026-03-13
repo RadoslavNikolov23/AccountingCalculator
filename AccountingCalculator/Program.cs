@@ -1,9 +1,12 @@
 using AccountingCalculator.Components;
+using MudBlazor.Services;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
+
+builder.Services.AddMudServices();
 
 WebApplication app = builder.Build();
 
