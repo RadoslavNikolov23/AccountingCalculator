@@ -1,7 +1,100 @@
 ﻿@page "/"
 
-<PageTitle>Home</PageTitle>
+<PageTitle>Счетоводен калкулатор</PageTitle>
 
-<h1>Hello, world!</h1>
+<MudStack AlignItems="AlignItems.Center" Class="mb-6">
+    <MudText Typo="Typo.h4" Align="Align.Center">
+        Добре дошли
+    </MudText>
+    <MudText Typo="Typo.subtitle1" Align="Align.Center" Color="Color.Secondary">
+        Изберете калкулатор от менюто или от картите по-долу
+    </MudText>
+</MudStack>
 
-Welcome to your new app.
+<MudGrid>
+
+    <MudItem xs="12" sm="6" md="3">
+        <MudCard Elevation="3"
+                 Style="cursor:pointer; height:100%;"
+                 @onclick='() => Nav.NavigateTo("/vat")'>
+            <MudCardContent Class="d-flex flex-column align-center justify-center pa-6"
+                            Style="height:100%;">
+                <MudIcon Icon="@Icons.Material.Filled.Receipt"
+                         Color="Color.Primary"
+                         Size="Size.Large" />
+                <MudText Typo="Typo.h6" Class="mt-3" Align="Align.Center">
+                    ДДС Калкулатор
+                </MudText>
+                <MudText Typo="Typo.body2" Color="Color.Secondary"
+                         Class="mt-1" Align="Align.Center">
+                    Изчисли ДДС от основа или от обща сума
+                </MudText>
+            </MudCardContent>
+        </MudCard>
+    </MudItem>
+
+    <MudItem xs="12" sm="6" md="3">
+        <MudCard Elevation="3"
+                 Style="cursor:pointer; height:100%;"
+                 @onclick='() => Nav.NavigateTo("/salary")'>
+            <MudCardContent Class="d-flex flex-column align-center justify-center pa-6"
+                            Style="height:100%;">
+                <MudIcon Icon="@Icons.Material.Filled.People"
+                         Color="Color.Secondary"
+                         Size="Size.Large" />
+                <MudText Typo="Typo.h6" Class="mt-3" Align="Align.Center">
+                    Калкулатор Заплата
+                </MudText>
+                <MudText Typo="Typo.body2" Color="Color.Secondary"
+                         Class="mt-1" Align="Align.Center">
+                    Нетна заплата, осигуровки и данъци
+                </MudText>
+            </MudCardContent>
+        </MudCard>
+    </MudItem>
+
+    <MudItem xs="12" sm="6" md="3">
+        <MudCard Elevation="3"
+                 Style="cursor:pointer; height:100%;"
+                 @onclick='() => Nav.NavigateTo("/corporate-tax")'>
+            <MudCardContent Class="d-flex flex-column align-center justify-center pa-6"
+                            Style="height:100%;">
+                <MudIcon Icon="@Icons.Material.Filled.AccountBalance"
+                         Color="Color.Tertiary"
+                         Size="Size.Large" />
+                <MudText Typo="Typo.h6" Class="mt-3" Align="Align.Center">
+                    Корпоративен Данък
+                </MudText>
+                <MudText Typo="Typo.body2" Color="Color.Secondary"
+                         Class="mt-1" Align="Align.Center">
+                    Данък печалба и дивидент
+                </MudText>
+            </MudCardContent>
+        </MudCard>
+    </MudItem>
+
+    <MudItem xs="12" sm="6" md="3">
+        <MudCard Elevation="3"
+                 Style="cursor:pointer; height:100%;"
+                 @onclick='() => Nav.NavigateTo("/vat-summary")'>
+            <MudCardContent Class="d-flex flex-column align-center justify-center pa-6"
+                            Style="height:100%;">
+                <MudIcon Icon="@Icons.Material.Filled.Summarize"
+                         Color="Color.Success"
+                         Size="Size.Large" />
+                <MudText Typo="Typo.h6" Class="mt-3" Align="Align.Center">
+                    Дневник ДДС
+                </MudText>
+                <MudText Typo="Typo.body2" Color="Color.Secondary"
+                         Class="mt-1" Align="Align.Center">
+                    Обобщение на фактури за период
+                </MudText>
+            </MudCardContent>
+        </MudCard>
+    </MudItem>
+
+</MudGrid>
+
+@code{
+    [Inject] NavigationManager Nav { get; set; } = default!;
+}

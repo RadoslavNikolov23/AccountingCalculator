@@ -1,5 +1,21 @@
-﻿<h3>ResultRow</h3>
+﻿<MudTr>
+    <MudTd>
+        <MudText Typo="@LabelTypo" Color="@LabelColor">
+            @Label
+        </MudText>
+    </MudTd>
+    <MudTd Style="text-align:right">
+        <MudText Typo="@ValueTypo" Color="@ValueColor">
+            @Value.ToString("C2")
+        </MudText>
+    </MudTd>
+</MudTr>
 
 @code {
-
+    [Parameter] public string Label { get; set; } = "";
+    [Parameter] public decimal Value { get; set; }
+    [Parameter] public Typo LabelTypo { get; set; } = Typo.body1;
+    [Parameter] public Typo ValueTypo { get; set; } = Typo.body1;
+    [Parameter] public Color LabelColor { get; set; } = Color.Default;
+    [Parameter] public Color ValueColor { get; set; } = Color.Default;
 }

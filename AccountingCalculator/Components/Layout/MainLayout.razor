@@ -1,23 +1,71 @@
 ﻿@inherits LayoutComponentBase
 
-<div class="page">
-    <div class="sidebar">
-        <NavMenu />
-    </div>
+<MudThemeProvider Theme="@_theme"/>
+<MudDialogProvider />
+<MudSnackbarProvider />
 
-    <main>
-        <div class="top-row px-4">
-            <a href="https://learn.microsoft.com/aspnet/core/" target="_blank">About</a>
-        </div>
+<MudLayout>
 
-        <article class="content px-4">
+    <MudAppBar Elevation="2" Color="Color.Primary">
+
+        <MudText Typo="Typo.h6" Class="ml-3">
+            Счетоводен Калкулатор
+        </MudText>
+
+        <MudSpacer />
+
+        <MudButton Href="/"
+                   Color="Color.Inherit"
+                   Variant="Variant.Text"
+                   StartIcon="@Icons.Material.Filled.Receipt">
+            ДДС
+        </MudButton>
+
+        <MudButton Href="/"
+                   Color="Color.Inherit"
+                   Variant="Variant.Text"
+                   StartIcon="@Icons.Material.Filled.People">
+            Заплата
+        </MudButton>
+
+        <MudButton Href="/"
+                   Color="Color.Inherit"
+                   Variant="Variant.Text"
+                   StartIcon="@Icons.Material.Filled.AccountBalance">
+            Корпоративен данък
+        </MudButton>
+
+        <MudButton Href="/"
+                   Color="Color.Inherit"
+                   Variant="Variant.Text"
+                   StartIcon="@Icons.Material.Filled.Summarize">
+            Дневник ДДС
+        </MudButton>
+
+    </MudAppBar>
+
+    <MudMainContent>
+        <MudToolBar />
+        <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="mt-4 pa-4">
             @Body
-        </article>
-    </main>
-</div>
+        </MudContainer>
+    </MudMainContent>
+</MudLayout>
 
-<div id="blazor-error-ui" data-nosnippet>
-    An unhandled error has occurred.
-    <a href="." class="reload">Reload</a>
-    <span class="dismiss">🗙</span>
-</div>
+@code{
+    private MudTheme _theme = new MudTheme()
+    {
+        PaletteLight = new PaletteLight()
+        {
+           // Primary = "#1565C0",   // deep blue
+            Secondary = "#546E7A",   // blue grey — replaces the red
+            Tertiary = "#00796B",   // teal
+            Success = "#2E7D32",   // dark green
+            Warning = "#F57F17",   // amber
+            Error = "#C62828",   // dark red
+            Background = "#F5F5F5",  // light grey page background
+            Surface = "#FFFFFF",   // white cards
+        }
+    };
+}
+
