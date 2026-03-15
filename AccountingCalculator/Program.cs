@@ -1,6 +1,6 @@
-using AccountingCalculator.Components;
 using AccountingCalculator.Services;
 using AccountingCalculator.Services.Contracts;
+using AccountingCalculator.Web.Components;
 using MudBlazor.Services;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);

@@ -19,9 +19,6 @@ namespace AccountingCalculator.Services
 
         public decimal ExtractNetFromTotal(decimal totalAmount, decimal varRate)
         {
-            if (ReducedVatRate == 0)
-                return totalAmount;
-
             return Math.Round(totalAmount / (1 + varRate / 100), 2, MidpointRounding.AwayFromZero);
         }
 
