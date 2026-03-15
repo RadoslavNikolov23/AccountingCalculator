@@ -1,4 +1,6 @@
 using AccountingCalculator.Components;
+using AccountingCalculator.Services;
+using AccountingCalculator.Services.Contracts;
 using MudBlazor.Services;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
@@ -7,6 +9,11 @@ builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
 builder.Services.AddMudServices();
+
+builder.Services.AddScoped<ICorporateTaxService, CorporateTaxService>();
+builder.Services.AddScoped<ISalaryCalculateService, SalaryCalculateService>();
+builder.Services.AddScoped<IVatTaxService, VatTaxService>();
+
 
 WebApplication app = builder.Build();
 

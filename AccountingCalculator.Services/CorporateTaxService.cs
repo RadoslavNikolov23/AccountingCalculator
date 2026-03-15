@@ -1,17 +1,12 @@
-﻿namespace AccountingCalculator.Calculations
+﻿using AccountingCalculator.DataModels;
+using AccountingCalculator.Services.Contracts;
+using static AccountingCalculator.Common.CorporateComponents;
+
+namespace AccountingCalculator.Services
 {
-    public class CorporateTaxCalculator
+    public class CorporateTaxService: ICorporateTaxService
     {
-        // Корпоративен данък от печалбата - 10%
-        public const decimal CorporateTaxRate = 0.10m;
-
-        //Мирко-предприятия данък за бизнес под 300 000лв. и до 10 служителя - 1%
-        public const decimal MicroEnterpriseTaxRate = 0.01m;
-
-        // Данък за дивиденти - 5%
-        public const decimal DividendTaxRate = 0.05m;
-
-        public static CorporateTaxResult Calculate(decimal revenue, decimal expenses, bool isMicroEnterprise = false)
+        public CorporateTaxResult Calculate(decimal revenue, decimal expenses, bool isMicroEnterprise = false)
         {
             decimal profit = revenue - expenses;
             decimal taxBase = profit > 0 ? profit : 0;
@@ -36,7 +31,7 @@
         }
 
         //Данък за дивиденти - изчислява се след заплащане на коорпоративния данък и се прилага върху разпределената печалба
-        public static DividendResult CalculateDividendTax(decimal netProfit)
+        public DividendResult CalculateDividendTax(decimal netProfit)
         {
             decimal dividendTax = Math.Round(netProfit * DividendTaxRate, 2, MidpointRounding.AwayFromZero);
             decimal netDividend = netProfit - dividendTax;
@@ -52,13 +47,13 @@
 
         // Общи данъци - Корпоративен данък + данък върху дивидентите
         // Показва какъв % от печалбата действително задържа собственикът
-        public static EffectiveTaxResult CalculateEffectiveTax(decimal revenue, decimal expenses, bool isMicroEnterprise = false)
+        public EffectiveTaxResult CalculateEffectiveTax(decimal revenue, decimal expenses, bool isMicroEnterprise = false)
         {
             CorporateTaxResult corporateTaxResult = Calculate(revenue, expenses, isMicroEnterprise);
             DividendResult dividendResult = CalculateDividendTax(corporateTaxResult.NetProfit);
             decimal totalTax = corporateTaxResult.TaxOwed + dividendResult.DividendTax;
             decimal effectiveTaxRate = corporateTaxResult.Profit > 0 ? Math.Round(totalTax / corporateTaxResult.Profit * 100, 2) : 0;
-           
+
             return new EffectiveTaxResult
             {
                 Corporate = corporateTaxResult,
@@ -67,35 +62,6 @@
                 EffectiveTaxRate = effectiveTaxRate,
                 OwnerReceives = dividendResult.NetDividend
             };
-        }
-
-        public class CorporateTaxResult
-        {
-            public decimal Revenue { get; set; }
-            public decimal Expenses { get; set; }
-            public decimal Profit { get; set; }
-            public decimal TaxBase { get; set; }
-            public decimal TaxRate { get; set; }
-            public decimal TaxOwed { get; set; }
-            public decimal NetProfit { get; set; }
-            public bool IsAtLoss { get; set; }
-            public bool IsMicroEnterprise { get; set; }
-        }
-
-        public class DividendResult
-        {
-            public decimal GrossDividend { get; set; }
-            public decimal DividendTax { get; set; }
-            public decimal NetDividend { get; set; }
-        }
-
-        public class EffectiveTaxResult
-        {
-            public CorporateTaxResult Corporate { get; set; } = default!;
-            public DividendResult Dividend { get; set; } = default!;
-            public decimal TotalTaxPaid { get; set; }
-            public decimal EffectiveTaxRate { get; set; }
-            public decimal OwnerReceives { get; set; }
         }
     }
 }

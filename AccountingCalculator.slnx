@@ -1,3 +1,6 @@
 <Solution>
+  <Project Path="AccountingCalculator.Common/AccountingCalculator.Common.csproj" Id="43c5ddfa-7fe2-436f-bb97-79fa3e77fa28" />
+  <Project Path="AccountingCalculator.DataModels/AccountingCalculator.DataModels.csproj" Id="4039a07d-8be7-41fa-a888-9335069341c2" />
+  <Project Path="AccountingCalculator.Services/AccountingCalculator.Services.csproj" Id="c3ac0121-0a3e-4865-8683-86d52169a875" />
   <Project Path="AccountingCalculator/AccountingCalculator.csproj" />
 </Solution>
