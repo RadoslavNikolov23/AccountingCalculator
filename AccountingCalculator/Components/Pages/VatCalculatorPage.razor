@@ -1,5 +1,294 @@
-﻿<h3>VatCalculatorPage</h3>
+﻿@page "/vat"
+@using AccountingCalculator.Common
+@using AccountingCalculator.Services.Contracts
+@rendermode InteractiveServer
+
+
+<PageTitle>ДДС Калкулатор</PageTitle>
+
+<MudText Typo="Typo.h4" Align="Align.Center" Class="mb-1">
+    ДДС Калкулатор
+</MudText>
+<MudText Typo="Typo.subtitle1" Align="Align.Center"
+         Color="Color.Secondary" Class="mb-6">
+    Изчисли ДДС от данъчна основа или от обща сума
+</MudText>
+
+<MudGrid Justify="Justify.Center">
+    @* Left side Card *@
+    <MudItem xs="12" sm="10" md="5">
+        <MudCard Elevation="3">
+            <MudCardHeader>
+                <CardHeaderContent>
+                    <MudText Typo="Typo.h6">
+                        <MudIcon Icon="@Icons.Material.Filled.Calculate" />
+                        Въведи данни
+                    </MudText>
+                </CardHeaderContent>
+            </MudCardHeader>
+
+            <MudCardContent>
+                <MudText Typo="Typo.subtitle2" Class="mb-2">
+                    Посока на изчислението
+                </MudText>
+                <MudButtonGroup Variant="Variant.Outlined"
+                                Color="Color.Primary"
+                                Class="mb-4"
+                                Style="width:100%">
+                    <MudButton FullWidth="true"
+                               Variant="@(fromNet ? Variant.Filled : Variant.Outlined)"
+                               OnClick="()=> SetDirection(false)">
+                        От основа → обща сума
+                    </MudButton>
+                    <MudButton FullWidth="true"
+                               Variant="@(!fromNet ? Variant.Filled : Variant.Outlined)"
+                               OnClick="() => SetDirection(false)">
+                        От обща сума → Основа
+                    </MudButton>
+                </MudButtonGroup>
+
+                <MudNumericField T="decimal"
+                                 Label="@(fromNet ? "Данъчна основа (евро)" : "Обща сума с ДДС (евро)")"
+                                 @bind-Value="amount"
+                                 Min="0"
+                                 Format="F2"
+                                 Adornment="Adornment.Start"
+                                 AdornmentText="евро"
+                                 Variant="Variant.Outlined"
+                                 Class="mb-4"
+                                 Immediate="true" />
+
+                <MudText Typo="Typo.subtitle2" Class="mb-2">
+                    Ставка ДДС
+                </MudText>
+                <MudButtonGroup Variant="Variant.Outlined"
+                                Color="Color.Primary"
+                                Class="mb-4"
+                                Style="width:100%">
+                    @foreach (var rate in _availableRates)
+                    {
+                        <MudButton FullWidth="true"
+                                   Variant="@(selectedRate == rate ? Variant.Filled : Variant.Outlined)"
+                                   OnClick="() => SetRate(rate)">
+                            @rate%
+                        </MudButton>
+                    }
+                </MudButtonGroup>
+
+            </MudCardContent>
+
+            <MudCardActions Class="pa-4">
+                <MudButton Variant="Variant.Filled"
+                           Color="Color.Primary"
+                           FullWidth="true"
+                           Size="Size.Large"
+                           StartIcon="@Icons.Material.Filled.Calculate"
+                           OnClick="Calculate">
+                    Изчисли
+                </MudButton>
+            </MudCardActions>
+        </MudCard>
+    </MudItem>
+
+    @* Rigth side Card *@
+    <MudItem xs="12" sm="10" md="5">
+        <MudCard Elevation="3" Style="height:100%">
+            <MudCardHeader>
+                <CardHeaderContent>
+                    <MudText Typo="Typo.h6">
+                        <MudIcon Icon="@Icons.Material.Filled.Receipt"
+                                 Class="mr-2" />
+                        Резултат
+                    </MudText>
+                </CardHeaderContent>
+            </MudCardHeader>
+
+            <MudCardContent>
+                @if (!calculated)
+                {
+                    <MudStack AlignItems="AlignItems.Center"
+                              Justify="Justify.Center"
+                              Style="height:200px">
+                        <MudIcon Icon="@Icons.Material.Filled.Receipt"
+                                 Size="Size.Large"
+                                 Color="Color.Secondary" />
+                        <MudText Color="Color.Secondary">
+                            Въведи сума и натисни Изчисли
+                        </MudText>
+                    </MudStack>
+                }
+                else
+                {
+                    <MudTable Items="@_resultRows"
+                              Hover="true"
+                              Elevation="0">
+                        <RowTemplate Context="row">
+                            <MudTd>
+                                <MudText Typo="@row.LabelTypo"
+                                         Color="@row.LabelColor">
+                                    @row.Label
+                                </MudText>
+                            </MudTd>
+                            <MudTd Style="text-align:right">
+                                <MudText Typo="@row.ValueTypo"
+                                         Color="@row.ValueColor">
+                                    @row.Value.ToString("F2") евро
+                                </MudText>
+                            </MudTd>
+                        </RowTemplate>
+                    </MudTable>
+
+                    @* VAT owed section *@
+                    <MudDivider Class="my-4" />
+                    <MudText Typo="Typo.subtitle2" Class="mb-3">
+                        Дължим ДДС към НАП
+                    </MudText>
+
+                    <MudNumericField T="decimal"
+                                     Label="ДДС продажби (евро)"
+                                     @bind-Value="salesVat"
+                                     Min="0"
+                                     Format="F2"
+                                     Adornment="Adornment.Start"
+                                     AdornmentText="лв."
+                                     Variant="Variant.Outlined"
+                                     Class="mb-3"
+                                     Immediate="true" />
+
+                    <MudNumericField T="decimal"
+                                     Label="ДДС покупки (евро)"
+                                     @bind-Value="purchasesVat"
+                                     Min="0"
+                                     Format="F2"
+                                     Adornment="Adornment.Start"
+                                     AdornmentText="лв."
+                                     Variant="Variant.Outlined"
+                                     Class="mb-3"
+                                     Immediate="true" />
+
+                    <MudButton Variant="Variant.Outlined"
+                               Color="Color.Primary"
+                               FullWidth="true"
+                               OnClick="CalculateOwed"
+                               StartIcon="@Icons.Material.Filled.Balance">
+                        Изчисли дължим ДДС
+                    </MudButton>
+
+                    @if (vatOwed.HasValue)
+                    {
+                        <MudAlert Severity="@(vatOwed >= 0 ? Severity.Warning : Severity.Success)">
+                            @if (vatOwed >= 0)
+                            {
+                                <MudText>
+                                    Дължите към НАП:
+                                    <strong>@vatOwed.Value.ToString("F2") евро</strong>
+                                </MudText>
+                            }
+                            else
+                            {
+                                <MudText>
+                                    НАП дължи на Вас:
+                                    <strong>@(Math.Abs(vatOwed.Value).ToString("F2")) евро</strong>
+                                </MudText>
+                            }
+                        </MudAlert>
+                    }
+                }
+            </MudCardContent>
+        </MudCard>
+    </MudItem>
+
+</MudGrid>
 
 @code {
+    [Inject] IVatTaxService VatService { get; set; } = default!;
 
+    private readonly List<decimal> _availableRates = new() { VatComponents.StandardVatRate, VatComponents.ReducedVatRate, VatComponents.ZeroVatRate };
+ 
+    // Inputs
+    private decimal amount = 0m;
+    private decimal selectedRate = 20m;
+    private bool fromNet = true;
+
+    // VAT owed inputs
+    private decimal salesVat = 0m;
+    private decimal purchasesVat = 0m;
+
+    // Results
+    private bool calculated = false;
+    private decimal netAmount = 0m;
+    private decimal vatAmount = 0m;
+    private decimal totalAmount = 0m;
+    private decimal? vatOwed;
+
+    // Result rows built after calculation
+    private List<ResultRowData> _resultRows = new();
+
+    private void SetDirection(bool isFromNet)
+    {
+        fromNet = isFromNet;
+        calculated = false;
+        vatOwed = null;
+    }
+
+    private void SetRate(decimal rate)
+    {
+        selectedRate = rate;
+        if (calculated) Calculate();
+    }
+
+    private void Calculate()
+    {
+        if (amount <= 0) return;
+
+        if (fromNet)
+        {
+            // Use your CalculateVatFromNet and CalculateTotalFromNet
+            netAmount = amount;
+            vatAmount = VatService.CalculateVatFromNet(amount, selectedRate);
+            totalAmount = VatService.CalculateTotalFromNet(amount, selectedRate);
+        }
+        else
+        {
+            // Use your ExtractNetFromTotal
+            netAmount = VatService.ExtractNetFromTotal(amount, selectedRate);
+            vatAmount = amount - netAmount;
+            totalAmount = amount;
+        }
+
+        calculated = true;
+        vatOwed = null;
+
+        // Build result rows
+        _resultRows = new List<ResultRowData>
+        {
+            new("Данъчна основа",
+                netAmount,
+                Typo.body1, Typo.body1,
+                Color.Default, Color.Default),
+
+            new($"ДДС ({selectedRate}%)",
+                vatAmount,
+                Typo.body1, Typo.body1,
+                Color.Secondary, Color.Secondary),
+
+            new("Обща сума",
+                totalAmount,
+                Typo.h6, Typo.h6,
+                Color.Primary, Color.Primary),
+        };
+    }
+
+    private void CalculateOwed()
+    {
+        vatOwed = VatService.CalculateVatOwed(salesVat, purchasesVat);
+    }
+
+    private record ResultRowData(
+        string Label,
+        decimal Value,
+        Typo LabelTypo,
+        Typo ValueTypo,
+        Color LabelColor,
+        Color ValueColor);
 }

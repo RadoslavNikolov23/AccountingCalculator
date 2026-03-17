@@ -5,7 +5,7 @@ using System.Text;
 namespace AccountingCalculator.Services.Contracts
 {
     public interface IVatTaxService
-    {
+    {        
         public decimal CalculateVatFromNet(decimal netAmount, decimal vatRate);
 
         public decimal CalculateTotalFromNet(decimal netAmount, decimal vatRate);
