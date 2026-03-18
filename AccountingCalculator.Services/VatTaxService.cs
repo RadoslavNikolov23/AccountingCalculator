@@ -30,8 +30,8 @@ namespace AccountingCalculator.Services
         public bool IsVatCorrect(decimal netAmount, decimal storedVat,
             decimal vatRate, decimal tolerance = 0.02m)
         {
-            var expectedTotal = CalculateTotalFromNet(netAmount, vatRate);
-            return Math.Round(storedVat - expectedTotal) <= tolerance;
+            var expectedVat = CalculateTotalFromNet(netAmount, vatRate);
+            return Math.Abs(storedVat - expectedVat) <= tolerance;
         }
     }
 }
