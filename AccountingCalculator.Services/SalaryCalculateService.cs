@@ -21,8 +21,11 @@ namespace AccountingCalculator.Services
             //Облагаем доход = бруто - социално осигуряване на служителя
             decimal taxableIncome = grossSalary - totalEmployeeContributions;
 
+            //Но НАП изисква: Облагаемият доход се закръгля до лев надолу преди изчисляване на ДОД.
+            decimal taxableIncomeRounded = Math.Floor(taxableIncome);
+
             //Изчисляване на данък общ доход
-            decimal incomeTax = Math.Round(taxableIncome * IncomeTaxRate, 2, MidpointRounding.AwayFromZero);
+            decimal incomeTax = Math.Round(taxableIncomeRounded * IncomeTaxRate, 2, MidpointRounding.AwayFromZero);
 
             //Изчисляване на нетната заплата
             decimal netSalary = grossSalary - totalEmployeeContributions - incomeTax;
