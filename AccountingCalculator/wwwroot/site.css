@@ -1,0 +1,37 @@
+﻿/* Custom styles for button hover effects */
+
+/* Add smooth transitions to all buttons */
+.hover-fill-button {
+    transition: all 0.2s ease !important;
+}
+
+/* Hover state for outlined buttons */
+.hover-fill-button.mud-button-outlined:hover {
+    background-color: var(--mud-palette-primary) !important;
+    color: white !important;
+    border-color: var(--mud-palette-primary) !important;
+}
+
+/* Selected/Filled state - purple color */
+.hover-fill-button.mud-button-filled {
+    background-color: #8E24AA !important;
+    color: white !important;
+}
+
+.hover-fill-button.mud-button-filled:hover {
+    background-color: #7B1FA2 !important;
+    color: white !important;
+}
+
+/* Active state (when clicking) - purple color and slight scale */
+.hover-fill-button:active {
+    background-color: #8E24AA !important;
+    transform: scale(0.97) !important;
+    color: white !important;
+}
+
+.hover-fill-button.mud-button-outlined:active {
+    background-color: #8E24AA !important;
+    border-color: #8E24AA !important;
+    color: white !important;
+}

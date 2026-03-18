@@ -36,11 +36,13 @@
                                 Class="mb-4"
                                 Style="width:100%">
                     <MudButton FullWidth="true"
+                               Class="hover-fill-button"
                                Variant="@(fromNet ? Variant.Filled : Variant.Outlined)"
-                               OnClick="()=> SetDirection(false)">
+                               OnClick="()=> SetDirection(true)">
                         От основа → обща сума
                     </MudButton>
                     <MudButton FullWidth="true"
+                               Class="hover-fill-button"
                                Variant="@(!fromNet ? Variant.Filled : Variant.Outlined)"
                                OnClick="() => SetDirection(false)">
                         От обща сума → Основа
@@ -51,12 +53,11 @@
                                  Label="@(fromNet ? "Данъчна основа (евро)" : "Обща сума с ДДС (евро)")"
                                  @bind-Value="amount"
                                  Min="0"
-                                 Format="F2"
+                                 Format="0.##"
                                  Adornment="Adornment.Start"
                                  AdornmentText="евро"
                                  Variant="Variant.Outlined"
-                                 Class="mb-4"
-                                 Immediate="true" />
+                                 Class="mb-4" />
 
                 <MudText Typo="Typo.subtitle2" Class="mb-2">
                     Ставка ДДС
@@ -69,6 +70,7 @@
                     {
                         <MudButton FullWidth="true"
                                    Variant="@(selectedRate == rate ? Variant.Filled : Variant.Outlined)"
+                                   Class="hover-fill-button"
                                    OnClick="() => SetRate(rate)">
                             @rate%
                         </MudButton>
@@ -148,23 +150,21 @@
                                      Label="ДДС продажби (евро)"
                                      @bind-Value="salesVat"
                                      Min="0"
-                                     Format="F2"
+                                     Format="0.##"
                                      Adornment="Adornment.Start"
-                                     AdornmentText="лв."
+                                     AdornmentText="евро"
                                      Variant="Variant.Outlined"
-                                     Class="mb-3"
-                                     Immediate="true" />
+                                     Class="mb-3" />
 
                     <MudNumericField T="decimal"
                                      Label="ДДС покупки (евро)"
                                      @bind-Value="purchasesVat"
                                      Min="0"
-                                     Format="F2"
+                                     Format="0.##"
                                      Adornment="Adornment.Start"
-                                     AdornmentText="лв."
+                                     AdornmentText="евро"
                                      Variant="Variant.Outlined"
-                                     Class="mb-3"
-                                     Immediate="true" />
+                                     Class="mb-3" />
 
                     <MudButton Variant="Variant.Outlined"
                                Color="Color.Primary"
@@ -221,7 +221,6 @@
     private decimal totalAmount = 0m;
     private decimal? vatOwed;
 
-    // Result rows built after calculation
     private List<ResultRowData> _resultRows = new();
 
     private void SetDirection(bool isFromNet)
@@ -243,14 +242,12 @@
 
         if (fromNet)
         {
-            // Use your CalculateVatFromNet and CalculateTotalFromNet
             netAmount = amount;
             vatAmount = VatService.CalculateVatFromNet(amount, selectedRate);
             totalAmount = VatService.CalculateTotalFromNet(amount, selectedRate);
         }
         else
         {
-            // Use your ExtractNetFromTotal
             netAmount = VatService.ExtractNetFromTotal(amount, selectedRate);
             vatAmount = amount - netAmount;
             totalAmount = amount;
@@ -259,7 +256,6 @@
         calculated = true;
         vatOwed = null;
 
-        // Build result rows
         _resultRows = new List<ResultRowData>
         {
             new("Данъчна основа",
