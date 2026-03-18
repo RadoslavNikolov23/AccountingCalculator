@@ -52,7 +52,7 @@ namespace AccountingCalculator.Services
             CorporateTaxResult corporateTaxResult = Calculate(revenue, expenses, isMicroEnterprise);
             DividendResult dividendResult = CalculateDividendTax(corporateTaxResult.NetProfit);
             decimal totalTax = corporateTaxResult.TaxOwed + dividendResult.DividendTax;
-            decimal effectiveTaxRate = corporateTaxResult.Profit > 0 ? Math.Round(totalTax / corporateTaxResult.Profit * 100, 2) : 0;
+            decimal effectiveTaxRate = corporateTaxResult.Profit > 0 ? Math.Round(totalTax / corporateTaxResult.Profit * 100, 2, MidpointRounding.AwayFromZero) : 0;
 
             return new EffectiveTaxResult
             {
