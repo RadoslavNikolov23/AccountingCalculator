@@ -1,5 +1,294 @@
-﻿<h3>SalaryCalculatorPage</h3>
+﻿@page "/salary"
+@using AccountingCalculator.DataModels
+@using AccountingCalculator.Services.Contracts
+@rendermode InteractiveServer
+
+<PageTitle>Калкулатор Заплата</PageTitle>
+
+<MudText Typo="Typo.h4" Align="Align.Center" Class="mb-1">
+    Калкулатор Заплата
+</MudText>
+
+<MudText Typo="Typo.h4" Align="Align.Center"
+         Color="Color.Secondary" Class="mb-6">
+    Изчисли нетна заплата, осигуровки и данъци
+</MudText>
+
+<MudGrid Justify="Justify.Center">
+
+    @* Left Side Card*@
+    <MudItem xs="12" sm="10" md="4">
+        <MudCard Elevation="3">
+            <MudCardHeader>
+                <CardHeaderContent>
+                    <MudText Typo="Typo.h6">
+                        <MudIcon Icon="@Icons.Material.Filled.People"
+                                 Class="mr-2" />
+                        Въведи брутна заплата
+                    </MudText>
+                </CardHeaderContent>
+            </MudCardHeader>
+
+            <MudCardContent>
+
+                <MudNumericField T="decimal"
+                                 Label="Брутна заплата (евро)"
+                                 @bind-Value="grossSalary"
+                                 Min="0"
+                                 Format="0.##"
+                                 Adornment="Adornment.Start"
+                                 AdornmentText="евро"
+                                 Variant="Variant.Outlined"
+                                 Class="mb-4"
+                                 Immediate="true" />
+
+                @* Info alert about insurable income limits *@
+                <MudAlert Severity="Severity.Info" Class="mb-4">
+                    <MudText Typo="Typo.body2">
+                        Минимален осигурителен доход: <strong>933 евро</strong>
+                    </MudText>
+                    <MudText Typo="Typo.body2">
+                        Максимален осигурителен доход: <strong>3 750 евро</strong>
+                    </MudText>
+                </MudAlert>
+
+                @* Rates info *@
+                <MudSimpleTable Elevation="0" Class="mb-2">
+                    <thead>
+                        <tr>
+                            <th>Осигуровка</th>
+                            <th style="text-align:right">Служител</th>
+                            <th style="text-align:right">Работодател</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>ДОО</td>
+                            <td style="text-align:right">10.58%</td>
+                            <td style="text-align:right">12.92%</td>
+                        </tr>
+                        <tr>
+                            <td>ДЗПО</td>
+                            <td style="text-align:right">3.30%</td>
+                            <td style="text-align:right">5.70%</td>
+                        </tr>
+                        <tr>
+                            <td>ЗО</td>
+                            <td style="text-align:right">3.20%</td>
+                            <td style="text-align:right">4.80%</td>
+                        </tr>
+                        <tr>
+                            <td>Трудова злополука</td>
+                            <td style="text-align:right">—</td>
+                            <td style="text-align:right">0.40%</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Общо</strong></td>
+                            <td style="text-align:right"><strong>17.08%</strong></td>
+                            <td style="text-align:right"><strong>23.82%</strong></td>
+                        </tr>
+                    </tbody>
+                </MudSimpleTable>
+
+            </MudCardContent>
+
+            <MudCardActions Class="pa-4">
+                <MudButton Variant="Variant.Filled"
+                           Color="Color.Primary"
+                           FullWidth="true"
+                           Size="Size.Large"
+                           StartIcon="@Icons.Material.Filled.Calculate"
+                           OnClick="Calculate">
+                    Изчисли
+                </MudButton>
+            </MudCardActions>
+        </MudCard>
+    </MudItem>
+
+    @* Rigth Side Card*@
+
+    <MudItem xs="12" sm="10" md="6">
+        @if (!calculated)
+        {
+            <MudCard Elevation="3">
+                <MudCardContent>
+                    <MudStack AlignItems="AlignItems.Center"
+                              Justify="Justify.Center"
+                              Style="height:200px">
+                        <MudIcon Icon="@Icons.Material.Filled.People"
+                                 Size="Size.Large"
+                                 Color="Color.Secondary" />
+                        <MudText Color="Color.Secondary">
+                            Въведи брутна заплата и натисни Изчисли
+                        </MudText>
+                    </MudStack>
+                </MudCardContent>
+            </MudCard>
+        }
+        else
+        {
+            @* Employee card *@
+            <MudCard Elevation="3" Class="mb-4">
+                <MudCardHeader>
+                    <CardHeaderContent>
+                        <MudText Typo="Typo.h6" Color="Color.Primary">
+                            <MudIcon Icon="@Icons.Material.Filled.Person"
+                                     Class="mr-2" />
+                            Служител
+                        </MudText>
+                    </CardHeaderContent>
+                </MudCardHeader>
+                <MudCardContent>
+                    <MudSimpleTable Elevation="0" Hover="true">
+                        <tbody>
+                            <tr>
+                                <td>Брутна заплата</td>
+                                <td style="text-align:right">
+                                    <strong>@breakdown!.GrossSalary.ToString("F2") евро</strong>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Осигурителен доход</td>
+                                <td style="text-align:right">
+                                    @breakdown.InsurableIncome.ToString("F2") евро
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>ДОО (10.58%)</td>
+                                <td style="text-align:right" class="mud-error-text">
+                                    - @breakdown.EmployeeDOO.ToString("F2") евро
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>ДЗПО (3.30%)</td>
+                                <td style="text-align:right" class="mud-error-text">
+                                    - @breakdown.EmployeeDZPO.ToString("F2") евро
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>ЗО (3.20%)</td>
+                                <td style="text-align:right" class="mud-error-text">
+                                    - @breakdown.EmployeeZO.ToString("F2") евро
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Общо осигуровки</td>
+                                <td style="text-align:right" class="mud-error-text">
+                                    - @breakdown.TotalEmployeeContributions.ToString("F2") евро
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Облагаем доход</td>
+                                <td style="text-align:right">
+                                    @breakdown.TaxableIncome.ToString("F2") евро
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Данък доход (10%)</td>
+                                <td style="text-align:right" class="mud-error-text">
+                                    - @breakdown.IncomeTax.ToString("F2") евро
+                                </td>
+                            </tr>
+                        </tbody>
+                    </MudSimpleTable>
+
+                    <MudDivider Class="my-3" />
+
+                    @* Net salary highlighted *@
+                    <MudStack Row="true"
+                              Justify="Justify.SpaceBetween"
+                              AlignItems="AlignItems.Center">
+                        <MudText Typo="Typo.h6">Нетна заплата</MudText>
+                        <MudText Typo="Typo.h5" Color="Color.Success">
+                            <strong>@breakdown.NetSalary.ToString("F2") евро</strong>
+                        </MudText>
+                    </MudStack>
+                </MudCardContent>
+            </MudCard>
+
+            @* Employer card *@
+            <MudCard Elevation="3">
+                <MudCardHeader>
+                    <CardHeaderContent>
+                        <MudText Typo="Typo.h6" Color="Color.Secondary">
+                            <MudIcon Icon="@Icons.Material.Filled.Business"
+                                     Class="mr-2" />
+                            Работодател
+                        </MudText>
+                    </CardHeaderContent>
+                </MudCardHeader>
+                <MudCardContent>
+                    <MudSimpleTable Elevation="0" Hover="true">
+                        <tbody>
+                            <tr>
+                                <td>Брутна заплата</td>
+                                <td style="text-align:right">
+                                    @breakdown.GrossSalary.ToString("F2") евро
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>ДОО (12.92%)</td>
+                                <td style="text-align:right" class="mud-error-text">
+                                    + @breakdown.EmployerDOO.ToString("F2") евро
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>ДЗПО (5.70%)</td>
+                                <td style="text-align:right" class="mud-error-text">
+                                    + @breakdown.EmployerDZPO.ToString("F2") евро
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>ЗО (4.80%)</td>
+                                <td style="text-align:right" class="mud-error-text">
+                                    + @breakdown.EmployerZO.ToString("F2") евро
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Трудова злополука (0.40%)</td>
+                                <td style="text-align:right" class="mud-error-text">
+                                    + @breakdown.EmployerAccident.ToString("F2") евро
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Общо осигуровки работодател</td>
+                                <td style="text-align:right" class="mud-error-text">
+                                    + @breakdown.TotalEmployerContributions.ToString("F2") евро
+                                </td>
+                            </tr>
+                        </tbody>
+                    </MudSimpleTable>
+
+                    <MudDivider Class="my-3" />
+
+                    @* Total employer cost *@
+                    <MudStack Row="true"
+                              Justify="Justify.SpaceBetween"
+                              AlignItems="AlignItems.Center">
+                        <MudText Typo="Typo.h6">Общ разход работодател</MudText>
+                        <MudText Typo="Typo.h5" Color="Color.Error">
+                            <strong>@breakdown.TotalCostToEmployer.ToString("F2") евро</strong>
+                        </MudText>
+                    </MudStack>
+                </MudCardContent>
+            </MudCard>
+        }
+    </MudItem>
+
+</MudGrid>
 
 @code {
+    [Inject] ISalaryCalculateService SalaryService { get; set; } = default!;
 
+    private decimal grossSalary = 0m;
+    private bool calculated = false;
+    private SalaryBreakdown? breakdown;
+
+    private void Calculate()
+    {
+        if (grossSalary <= 0) return;
+
+        breakdown = SalaryService.Calculate(grossSalary);
+        calculated = true;
+    }
 }
