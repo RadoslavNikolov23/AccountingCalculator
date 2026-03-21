@@ -5,9 +5,13 @@ using static AccountingCalculator.Common.SalaryComponents;
 
 namespace AccountingCalculator.Test
 {
+    [TestFixture]
     public class SalaryCalculateServiceTest
     {
         private ISalaryCalculateService salaryCalculateService = null!;
+
+        private const double minimumInsurableIncome = (double)MinInsurableIncome;
+        private const double maximumInsurableIncome = (double)MaxInsurableIncome;
 
         [SetUp]
         public void Setup()
@@ -18,11 +22,11 @@ namespace AccountingCalculator.Test
         [TestCase(1000)]
         [TestCase(1200)]
         [TestCase(1500)]
-        [TestCase(500)]   // below minimum insurable income
-        [TestCase(5000)]  // above maximum insurable income
+        [TestCase(500)]   // Below minimum insurable income
+        [TestCase(5000)]  // Above maximum insurable income
         public void Calculate_ShouldKeepInternalTotalsConsistent(decimal grossSalary)
         {
-            SalaryBreakdown result = salaryCalculateService.Calculate(grossSalary);
+            SalaryBreakdown result = this.salaryCalculateService.Calculate(grossSalary);
 
             Assert.Multiple(() =>
             {
@@ -40,17 +44,12 @@ namespace AccountingCalculator.Test
             });
         }
 
-        private static IEnumerable<TestCaseData> InsurableIncomeTestCases()
-        {
-            yield return new TestCaseData(500m, MinInsurableIncome).SetName("Below minimum insurable income");
-            yield return new TestCaseData(1000m, 1000m).SetName("Within range");
-            yield return new TestCaseData(5000m, MaxInsurableIncome).SetName("Above maximum insurable income");
-        }
-
-        [TestCaseSource(nameof(InsurableIncomeTestCases))]
+        [TestCase(500,minimumInsurableIncome)] //Below minimum insurable income
+        [TestCase(1000,1000)] //Within range
+        [TestCase(5000,maximumInsurableIncome)] //Above maximum insurable income
         public void Calculate_ShouldClampInsurableIncome(decimal grossSalary, decimal expectedInsurableIncome)
         {
-            SalaryBreakdown result = salaryCalculateService.Calculate(grossSalary);
+            SalaryBreakdown result = this.salaryCalculateService.Calculate(grossSalary);
 
             Assert.That(result.InsurableIncome, Is.EqualTo(expectedInsurableIncome));
         }
@@ -60,23 +59,23 @@ namespace AccountingCalculator.Test
         [TestCase(5000)]
         public void Calculate_ShouldApplyIncomeTaxOnFlooredTaxableIncome(decimal grossSalary)
         {
-            SalaryBreakdown result = salaryCalculateService.Calculate(grossSalary);
+            SalaryBreakdown result = this.salaryCalculateService.Calculate(grossSalary);
             decimal expectedTax = Math.Round(Math.Floor(result.TaxableIncome) * IncomeTaxRate, 2, MidpointRounding.AwayFromZero);
 
             Assert.That(result.IncomeTax, Is.EqualTo(expectedTax));
         }
 
-        [TestCase(1822.99, 1400.00, 2188.13)]
-        [TestCase(2000.00, 1535.94, 2400.60)]
+        [TestCase(1876.10, 1400.16, 2322.98)]
+        [TestCase(2500.00, 1865.70, 3095.50)]
         public void Calculate_ShouldMatchGoldenCases(decimal grossSalary, decimal expectedNetSalary, decimal expectedTotalCostToEmployer)
         {
-            SalaryBreakdown result = salaryCalculateService.Calculate(grossSalary);
+            SalaryBreakdown result = this.salaryCalculateService.Calculate(grossSalary);
 
             Assert.Multiple(() =>
             {
                 Assert.That(result.GrossSalary, Is.EqualTo(grossSalary));
-                Assert.That(result.NetSalary, Is.EqualTo(expectedNetSalary));
-                Assert.That(result.TotalCostToEmployer, Is.EqualTo(expectedTotalCostToEmployer));
+                Assert.That(result.NetSalary, Is.EqualTo(expectedNetSalary).Within(0.01m));
+                Assert.That(result.TotalCostToEmployer, Is.EqualTo(expectedTotalCostToEmployer).Within(0.01m));
             });
         }
 

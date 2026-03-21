@@ -19,7 +19,7 @@ namespace AccountingCalculator.Test
         [Test]
         public void Calculate_ShouldReturnCorrectTax_ForPositiveProfit()
         {
-            CorporateTaxResult result = serviceCorporateTax.Calculate(1000m, 400m);
+            CorporateTaxResult result = this.serviceCorporateTax.Calculate(1000m, 400m);
 
             Assert.That(result.Revenue, Is.EqualTo(1000m));
             Assert.That(result.Expenses, Is.EqualTo(400m));
@@ -35,7 +35,7 @@ namespace AccountingCalculator.Test
         [Test]
         public void Calculate_ShouldReturnZeroTax_ForZeroOrNegativeProfit()
         {
-            CorporateTaxResult result = serviceCorporateTax.Calculate(500m, 600m);
+            CorporateTaxResult result = this.serviceCorporateTax.Calculate(500m, 600m);
 
             Assert.That(result.Profit, Is.EqualTo(-100m));
             Assert.That(result.TaxBase, Is.EqualTo(0m));
@@ -47,7 +47,7 @@ namespace AccountingCalculator.Test
         [Test]
         public void Calculate_ShouldUseMicroEnterpriseRate_WhenFlagIsTrue()
         {
-            CorporateTaxResult result = serviceCorporateTax.Calculate(1000m, 400m, true);
+            CorporateTaxResult result = this.serviceCorporateTax.Calculate(1000m, 400m, true);
 
             Assert.That(result.TaxRate, Is.EqualTo(MicroEnterpriseTaxRate));
             Assert.That(result.TaxOwed, Is.EqualTo(Math.Round(600m * MicroEnterpriseTaxRate, 2)));
@@ -57,7 +57,7 @@ namespace AccountingCalculator.Test
         [TestCase(500)]
         public void CalculateDividendTax_ShouldReturnCorrectValues(decimal netProfit)
         {
-            DividendResult result = serviceCorporateTax.CalculateDividendTax(netProfit);
+            DividendResult result = this.serviceCorporateTax.CalculateDividendTax(netProfit);
 
             Assert.That(result.GrossDividend, Is.EqualTo(netProfit));
             Assert.That(result.DividendTax, Is.EqualTo(Math.Round(netProfit * DividendTaxRate, 2)));
@@ -67,7 +67,7 @@ namespace AccountingCalculator.Test
         [TestCase(2000,500)]
         public void CalculateEffectiveTax_ShouldReturnCorrectEffectiveTaxRate(decimal revenue, decimal expenses)
         {
-            EffectiveTaxResult result = serviceCorporateTax.CalculateEffectiveTax(revenue, expenses);
+            EffectiveTaxResult result = this.serviceCorporateTax.CalculateEffectiveTax(revenue, expenses);
 
             decimal expectedProfit = revenue - expenses;
             decimal expectedCorporateTax = Math.Round(expectedProfit * CorporateTaxRate, 2);
@@ -84,7 +84,7 @@ namespace AccountingCalculator.Test
         [TestCase(100,200)]
         public void CalculateEffectiveTax_ShouldHandleLosses(decimal revenue, decimal expenses)
         {
-            EffectiveTaxResult result = serviceCorporateTax.CalculateEffectiveTax(revenue, expenses);
+            EffectiveTaxResult result = this.serviceCorporateTax.CalculateEffectiveTax(revenue, expenses);
 
             Assert.That(result.TotalTaxPaid, Is.EqualTo(-5m));
             Assert.That(result.EffectiveTaxRate, Is.EqualTo(0m));

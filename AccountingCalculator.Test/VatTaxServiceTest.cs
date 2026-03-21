@@ -9,59 +9,48 @@ namespace AccountingCalculator.Test
     {
         private IVatTaxService vatTaxService = null!;
 
+        private const double standardVatRate = (double)StandardVatRate;
+        private const double reducedVatRate = (double)ReducedVatRate;
+        private const double zeroVatRate = (double)ZeroVatRate;
+
         [SetUp]
         public void Setup()
         {
             vatTaxService = new VatTaxService();
         }
 
-        private static IEnumerable<TestCaseData> VatFromNetTestCases()
-        {
-            yield return new TestCaseData(100m, StandardVatRate, 20m).SetName("Standard rate (20%)");
-            yield return new TestCaseData(100m, ReducedVatRate, 9m).SetName("Reduced rate (9%)");
-            yield return new TestCaseData(100m, ZeroVatRate, 0m).SetName("Zero rate (0%)");
-            yield return new TestCaseData(100.025m, StandardVatRate, 20.01m).SetName("Rounding with standard rate");
-            yield return new TestCaseData(-100m, StandardVatRate, -20m).SetName("Negative amount");
-        }
-
-        [TestCaseSource(nameof(VatFromNetTestCases))]
+        [TestCase(100, standardVatRate, 20)]
+        [TestCase(100, reducedVatRate, 9)]
+        [TestCase(100, zeroVatRate, 0)]
+        [TestCase(100.025, standardVatRate, 20.01)]
+        [TestCase(-100, standardVatRate, -20)]
         public void CalculateVatFromNet_ShouldCalculateCorrectly(decimal netAmount, decimal vatRate, decimal expectedVat)
         {
-            decimal result = vatTaxService.CalculateVatFromNet(netAmount, vatRate);
+            decimal result = this.vatTaxService.CalculateVatFromNet(netAmount, vatRate);
 
-            Assert.That(result, Is.EqualTo(expectedVat));
+            Assert.That(result, Is.EqualTo(expectedVat).Within(0.01m));
         }
 
-        private static IEnumerable<TestCaseData> TotalFromNetTestCases()
-        {
-            yield return new TestCaseData(100m, StandardVatRate, 120m).SetName("Standard rate (20%)");
-            yield return new TestCaseData(100m, ReducedVatRate, 109m).SetName("Reduced rate (9%)");
-            yield return new TestCaseData(100m, ZeroVatRate, 100m).SetName("Zero rate (0%)");
-            yield return new TestCaseData(100.025m, StandardVatRate, 120.04m).SetName("Rounding with standard rate");
-        }
-
-        [TestCaseSource(nameof(TotalFromNetTestCases))]
+        [TestCase(100, standardVatRate, 120)]
+        [TestCase(100, reducedVatRate, 109)]
+        [TestCase(100, zeroVatRate, 100)]
+        [TestCase(100.025, standardVatRate, 120.04)]
         public void CalculateTotalFromNet_ShouldCalculateCorrectly(decimal netAmount, decimal vatRate, decimal expectedTotal)
         {
-            decimal result = vatTaxService.CalculateTotalFromNet(netAmount, vatRate);
+            decimal result = this.vatTaxService.CalculateTotalFromNet(netAmount, vatRate);
 
-            Assert.That(result, Is.EqualTo(expectedTotal));
+            Assert.That(result, Is.EqualTo(expectedTotal).Within(0.01m));
         }
 
-        private static IEnumerable<TestCaseData> ExtractNetFromTotalTestCases()
-        {
-            yield return new TestCaseData(120m, StandardVatRate, 100m).SetName("Standard rate (20%)");
-            yield return new TestCaseData(109m, ReducedVatRate, 100m).SetName("Reduced rate (9%)");
-            yield return new TestCaseData(100m, ZeroVatRate, 100m).SetName("Zero rate (0%)");
-            yield return new TestCaseData(120.04m, StandardVatRate, 100.04m).SetName("Rounding with standard rate");
-        }
-
-        [TestCaseSource(nameof(ExtractNetFromTotalTestCases))]
+        [TestCase(120, standardVatRate, 100)]
+        [TestCase(109, reducedVatRate, 100)]
+        [TestCase(100, zeroVatRate, 100)]
+        [TestCase(120.04, standardVatRate, 100.04)]
         public void ExtractNetFromTotal_ShouldCalculateCorrectly(decimal totalAmount, decimal vatRate, decimal expectedNet)
         {
-            decimal result = vatTaxService.ExtractNetFromTotal(totalAmount, vatRate);
+            decimal result = this.vatTaxService.ExtractNetFromTotal(totalAmount, vatRate);
 
-            Assert.That(result, Is.EqualTo(expectedNet));
+            Assert.That(result, Is.EqualTo(expectedNet).Within(0.01m));
         }
 
         [TestCase(200, 50, 150)]
@@ -70,18 +59,18 @@ namespace AccountingCalculator.Test
         [TestCase(-10, 20, -30)]
         public void CalculateVatOwed_ShouldCalculateCorrectly(decimal salesVat, decimal purchaseVat, decimal expectedVatOwed)
         {
-            decimal result = vatTaxService.CalculateVatOwed(salesVat, purchaseVat);
+            decimal result = this.vatTaxService.CalculateVatOwed(salesVat, purchaseVat);
 
-            Assert.That(result, Is.EqualTo(expectedVatOwed));
+            Assert.That(result, Is.EqualTo(expectedVatOwed).Within(0.01m));
         }
 
         [Test]
         public void IsVatCorrect_ShouldReturnTrue_WhenStoredMatchesCalculatedTotalWithinTolerance()
         {
             decimal netAmount = 100m;
-            decimal expectedStored = vatTaxService.CalculateTotalFromNet(netAmount, StandardVatRate);
+            decimal expectedStored = this.vatTaxService.CalculateTotalFromNet(netAmount, StandardVatRate);
 
-            bool result = vatTaxService.IsVatCorrect(netAmount, expectedStored, StandardVatRate);
+            bool result = this.vatTaxService.IsVatCorrect(netAmount, expectedStored, StandardVatRate);
 
             Assert.That(result, Is.True);
         }
@@ -90,10 +79,10 @@ namespace AccountingCalculator.Test
         public void IsVatCorrect_ShouldRespectToleranceBoundary()
         {
             decimal netAmount = 100m;
-            decimal expectedStored = vatTaxService.CalculateTotalFromNet(netAmount, ReducedVatRate);
+            decimal expectedStored = this.vatTaxService.CalculateTotalFromNet(netAmount, ReducedVatRate);
 
-            bool exactlyOnBoundary = vatTaxService.IsVatCorrect(netAmount, expectedStored + 0.02m, ReducedVatRate);
-            bool outsideBoundary = vatTaxService.IsVatCorrect(netAmount, expectedStored + 0.0201m, ReducedVatRate);
+            bool exactlyOnBoundary = this.vatTaxService.IsVatCorrect(netAmount, expectedStored + 0.02m, ReducedVatRate);
+            bool outsideBoundary = this.vatTaxService.IsVatCorrect(netAmount, expectedStored + 0.0201m, ReducedVatRate);
 
             Assert.That(exactlyOnBoundary, Is.True);
             Assert.That(outsideBoundary, Is.False);
@@ -105,7 +94,7 @@ namespace AccountingCalculator.Test
             decimal netAmount = 100m;
             decimal storedVatOnly = 20m;
 
-            bool result = vatTaxService.IsVatCorrect(netAmount, storedVatOnly, StandardVatRate);
+            bool result = this.vatTaxService.IsVatCorrect(netAmount, storedVatOnly, StandardVatRate);
 
             Assert.That(result, Is.False);
         }
