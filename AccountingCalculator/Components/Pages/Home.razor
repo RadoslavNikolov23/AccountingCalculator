@@ -15,27 +15,6 @@
 <MudGrid Justify="Justify.Center">
 
     <MudItem xs="12" sm="6" md="3">
-        <div @onclick='() => Nav.NavigateTo("/vat-tax")'
-             style="cursor:pointer; height:100%;">
-            <MudCard Elevation="3" Style="height:100%;">
-                <MudCardContent Class="d-flex flex-column align-center justify-center pa-6"
-                                Style="height:100%;">
-                    <MudIcon Icon="@Icons.Material.Filled.Receipt"
-                             Color="Color.Primary"
-                             Size="Size.Large" />
-                    <MudText Typo="Typo.h6" Class="mt-3" Align="Align.Center">
-                        ДДС Калкулатор
-                    </MudText>
-                    <MudText Typo="Typo.body2" Color="Color.Secondary"
-                             Class="mt-1" Align="Align.Center">
-                        Изчисли ДДС от основа или от обща сума
-                    </MudText>
-                </MudCardContent>
-            </MudCard>
-        </div>
-    </MudItem>
-
-    <MudItem xs="12" sm="6" md="3">
         <div @onclick='() => Nav.NavigateTo("/salary")'
              style="cursor:pointer; height:100%;">
             <MudCard Elevation="3" Style="height:100%;">
@@ -57,6 +36,27 @@
     </MudItem>
 
     <MudItem xs="12" sm="6" md="3">
+        <div @onclick='() => Nav.NavigateTo("/vat-tax")'
+             style="cursor:pointer; height:100%;">
+            <MudCard Elevation="3" Style="height:100%;">
+                <MudCardContent Class="d-flex flex-column align-center justify-center pa-6"
+                                Style="height:100%;">
+                    <MudIcon Icon="@Icons.Material.Filled.Receipt"
+                             Color="Color.Primary"
+                             Size="Size.Large" />
+                    <MudText Typo="Typo.h6" Class="mt-3" Align="Align.Center">
+                        ДДС Калкулатор
+                    </MudText>
+                    <MudText Typo="Typo.body2" Color="Color.Secondary"
+                             Class="mt-1" Align="Align.Center">
+                        Изчисли ДДС от основа или от обща сума
+                    </MudText>
+                </MudCardContent>
+            </MudCard>
+        </div>
+    </MudItem>
+
+    <MudItem xs="12" sm="6" md="3">
         <div @onclick='() => Nav.NavigateTo("/corporate-tax")'
              style="cursor:pointer; height:100%;">
             <MudCard Elevation="3" Style="height:100%;">
@@ -66,7 +66,7 @@
                              Color="Color.Tertiary"
                              Size="Size.Large" />
                     <MudText Typo="Typo.h6" Class="mt-3" Align="Align.Center">
-                        Корпоративен Данък
+                        Корпоративен Данък Калкулатор
                     </MudText>
                     <MudText Typo="Typo.body2" Color="Color.Secondary"
                              Class="mt-1" Align="Align.Center">
