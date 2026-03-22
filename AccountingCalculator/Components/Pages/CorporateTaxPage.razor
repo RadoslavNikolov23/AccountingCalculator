@@ -1,8 +1,467 @@
 ﻿@page "/corporate-tax"
+@using AccountingCalculator.DataModels
+@using AccountingCalculator.Services.Contracts
+@rendermode InteractiveServer
 
 
-<h3>CorporateTaxPage</h3>
+<PageTitle>Корпоративен Данък</PageTitle>
+
+<MudText Typo="Typo.h4" Align="Align.Center" Class="mb-1">
+    Корпоративен Данък
+</MudText>
+
+<MudText Typo="Typo.subtitle1" Align="Align.Center"
+         Color="Color.Secondary" Class="mb-1">
+    Изчисли корпоративен данък, дивидент и ефективна данъчна тежест
+</MudText>
+
+
+<MudGrid Justify="Justify.Center">
+
+    @*Left Side Card*@
+    <MudItem xs="12" sm="10" md="4">
+        <MudCard Elevation="3">
+            <MudCardHeader>
+                <CardHeaderContent>
+                    <MudText Typo="Typo.h6">
+                        <MudIcon Icon="@Icons.Material.Filled.AccountBalance"
+                                 Class="mr-2" />
+                        Въведи данни
+                    </MudText>
+                </CardHeaderContent>
+            </MudCardHeader>
+
+            <MudCardContent Class="pa-5">
+
+                <MudNumericField T="decimal"
+                                 Label="Приходи евро"
+                                 @bind-Value="revenue"
+                                 Min="0"
+                                 Format="0.##"
+                                 Adornment="Adornment.Start"
+                                 AdornmentText="евро"
+                                 Variant="Variant.Outlined"
+                                 Class="mb-4"
+                                 Immediate="true" />
+
+                <MudNumericField T="decimal"
+                                 Label="Разходи евро"
+                                 @bind-Value="expenses"
+                                 Min="0"
+                                 Format="0.##"
+                                 Adornment="Adornment.Start"
+                                 AdornmentText="евро"
+                                 Variant="Variant.Outlined"
+                                 Class="mb-4"
+                                 Immediate="true" />
+                <MudSwitch T="bool"
+                           @bind-Value="isMicro"
+                           Color="Color.Primary"
+                           Class="mb-2">
+                    <MudText>Микропредприятие (1%)</MudText>
+                </MudSwitch>
+            </MudCardContent>
+
+            @if (isMicro)
+            {
+                <MudAlert Severity="Severity.Info" Class="mb-4">
+                    <MudText Typo="Typo.body2">
+                        Ставка за микропредприятия: <strong>1%</strong>
+                    </MudText>
+                    <MudText Typo="Typo.body2">
+                        Приложимо при приходи под 300 000 евро
+                        и до 10 служители
+                    </MudText>
+                </MudAlert>
+            }
+            else
+            {
+                <MudAlert Severity="Severity.Info" Class="mb-4">
+                    <MudText Typo="Typo.body2">
+                        Стандартна ставка: <strong>10%</strong>
+                    </MudText>
+                    <MudText Typo="Typo.body2">
+                        Данък върху дивидент: <strong>5%</strong>
+                    </MudText>
+                </MudAlert>
+            }
+
+            @* What to calculate *@
+            <MudText Typo="Typo.subtitle2" Class="mb-2 pr-2 pl-2">
+                Вид изчисление
+            </MudText>
+            <MudButtonGroup Variant="Variant.Outlined"
+                            Color="Color.Primary"
+                            Class="mb-2 pa-2"
+                            Style="width:100%">
+                <MudButton FullWidth="true"
+                           Class="hover-fill-button"
+                           Variant="@(calcMode == CalcMode.Corporate ? Variant.Filled : Variant.Outlined)"
+                           OnClick='() => calcMode = CalcMode.Corporate'>
+                    Корп. данък
+                </MudButton>
+                <MudButton FullWidth="true"
+                           Class="hover-fill-button"
+                           Variant="@(calcMode == CalcMode.Dividend ? Variant.Filled : Variant.Outlined)"
+                           OnClick='() => calcMode = CalcMode.Dividend'>
+                    Дивидент
+                </MudButton>
+                <MudButton FullWidth="true"
+                           Class="hover-fill-button"
+                           Variant="@(calcMode == CalcMode.Effective ? Variant.Filled : Variant.Outlined)"
+                           OnClick='() => calcMode = CalcMode.Effective'>
+                    Ефективен
+                </MudButton>
+            </MudButtonGroup>
+
+        <MudCardActions Class="pa-4">
+            <MudButton Variant="Variant.Filled"
+                       Color="Color.Primary"
+                       FullWidth="true"
+                       Size="Size.Large"
+                       StartIcon="@Icons.Material.Filled.Calculate"
+                       OnClick="Calculate">
+                Изчисли
+            </MudButton>
+        </MudCardActions>
+    </MudCard>
+</MudItem>
+
+
+@*Rigth Side Card*@
+
+<MudItem xs="12" sm="10" md="6">
+    @if (!calculated)
+    {
+        <MudCard Elevation="3">
+            <MudCardContent Class="pa-4">
+                <MudStack AlignItems="AlignItems.Center"
+                          Justify="Justify.Center"
+                          Style="height:200px">
+                    <MudIcon Icon="@Icons.Material.Filled.AccountBalance"
+                             Size="Size.Large"
+                             Color="Color.Secondary" />
+                    <MudText Color="Color.Secondary">
+                        Въведи приходи и разходи и натисни Изчисли
+                    </MudText>
+                </MudStack>
+            </MudCardContent>
+        </MudCard>
+    }
+    else
+    {
+        @* ── Corporate tax results ── *@
+        @if (calcMode == CalcMode.Corporate && corpResult is not null)
+        {
+            <MudCard Elevation="3">
+                <MudCardHeader>
+                    <CardHeaderContent>
+                        <MudText Typo="Typo.h6" Color="Color.Primary">
+                            <MudIcon Icon="@Icons.Material.Filled.AccountBalance"
+                                     Class="mr-2" />
+                            Корпоративен данък
+                            @(corpResult.IsMicroEnterprise ? "(Микро 1%)" : "(10%)")
+                        </MudText>
+                    </CardHeaderContent>
+                </MudCardHeader>
+                <MudCardContent>
+                    <MudSimpleTable Elevation="0" Hover="true">
+                        <tbody>
+                            <tr>
+                                <td>Приходи</td>
+                                <td style="text-align:right">
+                                        @corpResult.Revenue.ToString("F2") евро
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Разходи</td>
+                                <td style="text-align:right"
+                                    class="mud-error-text">
+                                        - @corpResult.Expenses.ToString("F2") евро
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Печалба преди данък</td>
+                                <td style="text-align:right">
+                                        @corpResult.Profit.ToString("F2") евро
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Данъчна основа</td>
+                                <td style="text-align:right">
+                                        @corpResult.TaxBase.ToString("F2") евро
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    Корпоративен данък
+                                    (@corpResult.TaxRate%)
+                                </td>
+                                <td style="text-align:right"
+                                    class="mud-error-text">
+                                        - @corpResult.TaxOwed.ToString("F2") евро
+                                </td>
+                            </tr>
+                        </tbody>
+                    </MudSimpleTable>
+
+                    <MudDivider Class="my-3" />
+
+                    @if (corpResult.IsAtLoss)
+                    {
+                        <MudAlert Severity="Severity.Warning">
+                            <MudText>
+                                Дружеството е на загуба —
+                                не се дължи корпоративен данък
+                            </MudText>
+                        </MudAlert>
+                    }
+                    else
+                    {
+                        <MudStack Row="true"
+                                  Justify="Justify.SpaceBetween"
+                                  AlignItems="AlignItems.Center">
+                            <MudText Typo="Typo.h6">Нетна печалба</MudText>
+                            <MudText Typo="Typo.h5" Color="Color.Success">
+                                <strong>
+                                        @corpResult.NetProfit.ToString("F2") евро
+                                </strong>
+                            </MudText>
+                        </MudStack>
+                    }
+                </MudCardContent>
+            </MudCard>
+        }
+
+        @* ── Dividend results ── *@
+        @if (calcMode == CalcMode.Dividend && divResult is not null)
+        {
+            <MudCard Elevation="3">
+                <MudCardHeader>
+                    <CardHeaderContent>
+                        <MudText Typo="Typo.h6" Color="Color.Primary">
+                            <MudIcon Icon="@Icons.Material.Filled.Payments"
+                                     Class="mr-2" />
+                            Данък върху дивидент (5%)
+                        </MudText>
+                    </CardHeaderContent>
+                </MudCardHeader>
+                <MudCardContent>
+                    <MudSimpleTable Elevation="0" Hover="true">
+                        <tbody>
+                            <tr>
+                                <td>Нетна печалба (база)</td>
+                                <td style="text-align:right">
+                                    @divResult.GrossDividend.ToString("F2") евро
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Данък дивидент (5%)</td>
+                                <td style="text-align:right"
+                                    class="mud-error-text">
+                                        - @divResult.DividendTax.ToString("F2") евро
+                                </td>
+                            </tr>
+                        </tbody>
+                    </MudSimpleTable>
+
+                    <MudDivider Class="my-3" />
+
+                    <MudStack Row="true"
+                              Justify="Justify.SpaceBetween"
+                              AlignItems="AlignItems.Center">
+                        <MudText Typo="Typo.h6">Получава собственикът</MudText>
+                        <MudText Typo="Typo.h5" Color="Color.Success">
+                            <strong>
+                                    @divResult.NetDividend.ToString("F2") евро
+                            </strong>
+                        </MudText>
+                    </MudStack>
+                </MudCardContent>
+            </MudCard>
+        }
+
+        @* ── Effective tax results ── *@
+        @if (calcMode == CalcMode.Effective && effectiveResult is not null)
+        {
+            <MudCard Elevation="3" Class="mb-4">
+                <MudCardHeader>
+                    <CardHeaderContent>
+                        <MudText Typo="Typo.h6" Color="Color.Primary">
+                            <MudIcon Icon="@Icons.Material.Filled.PieChart"
+                                     Class="mr-2" />
+                            Ефективна данъчна тежест
+                        </MudText>
+                    </CardHeaderContent>
+                </MudCardHeader>
+                <MudCardContent>
+
+                    @* Corporate tax part *@
+                    <MudText Typo="Typo.subtitle2"
+                             Color="Color.Secondary"
+                             Class="mb-2">
+                        Корпоративен данък
+                    </MudText>
+                    <MudSimpleTable Elevation="0" Hover="true" Class="mb-3">
+                        <tbody>
+                            <tr>
+                                <td>Приходи</td>
+                                <td style="text-align:right">
+                                    @effectiveResult.Corporate.Revenue.ToString("F2") евро
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Разходи</td>
+                                <td style="text-align:right"
+                                    class="mud-error-text">
+                                    - @effectiveResult.Corporate.Expenses.ToString("F2") евро
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Печалба</td>
+                                <td style="text-align:right">
+                                    @effectiveResult.Corporate.Profit.ToString("F2") евро
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    Корп. данък
+                                    (@effectiveResult.Corporate.TaxRate%)
+                                </td>
+                                <td style="text-align:right"
+                                    class="mud-error-text">
+                                    - @effectiveResult.Corporate.TaxOwed.ToString("F2") евро
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Нетна печалба</td>
+                                <td style="text-align:right">
+                                    @effectiveResult.Corporate.NetProfit.ToString("F2") евро
+                                </td>
+                            </tr>
+                        </tbody>
+                    </MudSimpleTable>
+
+                    <MudDivider Class="my-3" />
+
+                    @* Dividend part *@
+                    <MudText Typo="Typo.subtitle2"
+                             Color="Color.Secondary"
+                             Class="mb-2">
+                        Данък върху дивидент
+                    </MudText>
+                    <MudSimpleTable Elevation="0" Hover="true" Class="mb-3">
+                        <tbody>
+                            <tr>
+                                <td>База (нетна печалба)</td>
+                                <td style="text-align:right">
+                                    @effectiveResult.Dividend.GrossDividend.ToString("F2") евро
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Данък дивидент (5%)</td>
+                                <td style="text-align:right"
+                                    class="mud-error-text">
+                                    - @effectiveResult.Dividend.DividendTax.ToString("F2") евро
+                                </td>
+                            </tr>
+                        </tbody>
+                    </MudSimpleTable>
+
+                    <MudDivider Class="my-3" />
+
+                    @* Summary *@
+                    <MudSimpleTable Elevation="0" Class="mb-3">
+                        <tbody>
+                            <tr>
+                                <td>Общо платени данъци</td>
+                                <td style="text-align:right"
+                                    class="mud-error-text">
+                                    <strong>
+                                        @effectiveResult.TotalTaxPaid.ToString("F2") евро
+                                    </strong>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Ефективна данъчна ставка</td>
+                                <td style="text-align:right"
+                                    class="mud-error-text">
+                                    <strong>
+                                        @effectiveResult.EffectiveTaxRate%
+                                    </strong>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </MudSimpleTable>
+
+                    <MudDivider Class="my-3" />
+
+                    <MudStack Row="true"
+                              Justify="Justify.SpaceBetween"
+                              AlignItems="AlignItems.Center">
+                        <MudText Typo="Typo.h6">
+                            Собственикът получава
+                        </MudText>
+                        <MudText Typo="Typo.h5" Color="Color.Success">
+                            <strong>
+                                @effectiveResult.OwnerReceives.ToString("F2") евро
+                            </strong>
+                        </MudText>
+                    </MudStack>
+
+                </MudCardContent>
+            </MudCard>
+        }
+    }
+</MudItem>
+
+</MudGrid>
 
 @code {
+    [Inject] ICorporateTaxService TaxService { get; set; } = default!;
 
+    // Inputs
+    private decimal revenue = 0m;
+    private decimal expenses = 0m;
+    private bool isMicro = false;
+    private CalcMode calcMode = CalcMode.Corporate;
+
+    // Results
+    private bool calculated = false;
+    private CorporateTaxResult? corpResult;
+    private DividendResult? divResult;
+    private EffectiveTaxResult? effectiveResult;
+
+    private void Calculate()
+    {
+        if (revenue <= 0) return;
+
+        switch (calcMode)
+        {
+            case CalcMode.Corporate:
+                corpResult = TaxService.Calculate(revenue, expenses, isMicro);
+                break;
+
+            case CalcMode.Dividend:
+                // First calculate corporate tax to get net profit
+                // then calculate dividend on that
+                CorporateTaxResult corp = TaxService.Calculate(revenue, expenses, isMicro);
+                divResult = TaxService.CalculateDividendTax(corp.NetProfit);
+                break;
+
+            case CalcMode.Effective:
+                effectiveResult = TaxService.CalculateEffectiveTax(revenue, expenses, isMicro);
+                break;
+        }
+
+        calculated = true;
+    }
+
+    // Enum to track which calculation mode is selected
+    private enum CalcMode
+    {
+        Corporate,
+        Dividend,
+        Effective
+    }
 }
